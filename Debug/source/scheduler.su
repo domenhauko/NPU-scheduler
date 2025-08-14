@@ -1,0 +1,9 @@
+../source/scheduler.c:53:6:setCpuBusy	48	static
+../source/scheduler.c:88:6:setNpuBusy	48	static
+../source/scheduler.c:123:13:updateTaskStates	32	static
+../source/scheduler.c:160:12:compareTasksPriority	16	static
+../source/scheduler.c:174:19:selectNextTask	32	static
+../source/scheduler.c:194:13:shouldPreemptTask	32	static
+../source/scheduler.c:220:13:preemptTask	40	static
+../source/scheduler.c:256:6:printSchedulerStats	24	static
+../source/scheduler.c:282:6:runTaskScheduler	88	static

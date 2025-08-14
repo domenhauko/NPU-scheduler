@@ -1,0 +1,8 @@
+../source/timer.c:32:6:TIMER_Init	4	static
+../source/timer.c:49:5:TIMER_GetTimeInUS	16	static
+../source/timer.c:63:10:TIMER_GetTimeInUS64	64	static
+../source/timer.c:76:10:TIMER_GetCycles	8	static
+../source/timer.c:84:10:TIMER_CyclesToMicroseconds	16	static
+../source/timer.c:89:10:TIMER_GetSafeTimestamp	8	static
+../source/timer.c:95:10:TIMER_CalculateDuration	16	static
+C:/nxp/MCUXpressoIDE_24.12.148/ide/plugins/com.nxp.mcuxpresso.tools.win32_24.12.0.202407110909/tools/arm-none-eabi/include/sys/time.h:432:5:gettimeofday	32	static

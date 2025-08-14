@@ -1,0 +1,7 @@
+../source/random_task_generator.c:43:6:initRandomTaskGenerator	16	static
+../source/random_task_generator.c:50:17:nextRandom	4	static
+../source/random_task_generator.c:55:10:getRandomNumber	16	static
+../source/random_task_generator.c:60:12:generateRandomTask	128	static
+../source/random_task_generator.c:121:6:randomTask	56	static
+../source/random_task_generator.c:144:6:createRandomTasks	48	static
+../source/random_task_generator.c:191:6:cleanupRandomTasks	16	static

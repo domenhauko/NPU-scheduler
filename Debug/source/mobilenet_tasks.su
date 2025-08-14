@@ -1,0 +1,5 @@
+../source/mobilenet_tasks.c:28:6:createMobileNetTasks	216	static
+../source/mobilenet_tasks.c:107:6:mobilenetTask	88	static
+../source/mobilenet_tasks.c:151:6:helloTask	56	static
+../source/mobilenet_tasks.c:168:6:goodbyeTask	56	static
+../source/mobilenet_tasks.c:185:6:taskFunctionEDF	24	static
