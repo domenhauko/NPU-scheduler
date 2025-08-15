@@ -131,9 +131,7 @@ static void updateTaskStates(uint32_t currentTime) {
                 PRINTF("[CRITICAL ERROR] Hard deadline missed by task %s! Time: %u, Deadline: %u\r\n",
                        task->name, currentTime, task->absoluteDeadline);
                 PRINTF("[SYSTEM HALT] Hard deadline violation - stopping system!\r\n");
-                //printAllTaskDurations();
-                // In a real system, you might want to trigger a system reset or safe mode
-                //while(1); // Halt the system
+                while(1); // Halt the system
                 task->state = TASK_STATE_WAITING; // For now continue and log for timing
             } else {
                 if (task->state != TASK_STATE_PREEMPTED) { // Only log once for soft misses
@@ -307,7 +305,6 @@ void runTaskScheduler(void* params) {
 
                 if (nextCpuTask->handle != NULL) {
                     xTaskNotifyGive(nextCpuTask->handle);
-                    //PRINTF("Now the %s task has started.\r\n", nextCpuTask->name);
                 }
             }
         } else {
@@ -337,9 +334,7 @@ void runTaskScheduler(void* params) {
 
                     if (currentCpuTask->handle != NULL) {
                     	xTaskNotifyGive(currentCpuTask->handle);
-                        //PRINTF("Is the task actually started?\r\n");
                     }
-                    // --- FIX END ---
                 }
             }
         }
@@ -353,7 +348,6 @@ void runTaskScheduler(void* params) {
 
                 if (nextNpuTask->handle != NULL) {
                     xTaskNotifyGive(nextNpuTask->handle);
-                    //PRINTF("Now the %s task has started.\r\n", nextNpuTask->name);
                 }
             }
         } else {
@@ -376,7 +370,6 @@ void runTaskScheduler(void* params) {
                     if (currentNpuTask->handle != NULL) {
                         xTaskNotifyGive(currentNpuTask->handle);
                     }
-                    // --- FIX END ---
                 }
             }
         }

@@ -37,7 +37,7 @@ typedef struct TaskModel {
 	uint32_t period;			// PI: Period in microseconds
 	uint32_t deadline; 			// D: Deadline in microseconds (relative to release time)
 	uint32_t capacity;			// C: Computation time (WCET)
-	uint32_t priority;			// P: Task priority (lower number = higher priority)
+	uint32_t priority;			// P: Task priority (higher number = higher priority)
 	uint32_t stackSize;			// S: Stack size
 	TaskType type;				// T: CPU or NPU
 	DeadlineType deadlineType;	// Hard or soft deadline
