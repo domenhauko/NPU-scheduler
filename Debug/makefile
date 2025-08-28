@@ -61,7 +61,7 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := custom_TaskModel
+BUILD_ARTIFACT_NAME := custom_TaskModel_preempt
 BUILD_ARTIFACT_EXTENSION := axf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
@@ -73,24 +73,24 @@ all:
 	+@$(MAKE) --no-print-directory main-build && $(MAKE) --no-print-directory post-build
 
 # Main-build Target
-main-build: custom_TaskModel.axf
+main-build: custom_TaskModel_preempt.axf
 
 # Tool invocations
-custom_TaskModel.axf: $(OBJS) $(USER_OBJS) makefile $(OPTIONAL_TOOL_DEPS)
+custom_TaskModel_preempt.axf: $(OBJS) $(USER_OBJS) makefile $(OPTIONAL_TOOL_DEPS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU C++ Linker'
-	arm-none-eabi-c++ -nostdlib -L"C:\Users\Domen\Documents\MCUXpressoIDE_24.12.148\workspace\custom_TaskModel\eiq\tensorflow-lite\lib\cm33\armgcc" -L"C:\Users\Domen\Documents\MCUXpressoIDE_24.12.148\workspace\custom_TaskModel\eiq\tensorflow-lite\third_party\neutron\mcxn" -u _printf_long_long -Xlinker -no-warn-rwx-segments -Xlinker -Map="custom_TaskModel.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -Xlinker --cref -mcpu=cortex-m33 -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -T custom_TaskModel_Debug.ld -o "custom_TaskModel.axf" $(OBJS) $(USER_OBJS) $(LIBS) -ltflm -lNeutronDriver -lNeutronFirmware
+	arm-none-eabi-c++ -nostdlib -L"C:\Users\Domen\Documents\MCUXpressoIDE_24.12.148\workspace\custom_TaskModel_preempt\eiq\tensorflow-lite\lib\cm33\armgcc" -L"C:\Users\Domen\Documents\MCUXpressoIDE_24.12.148\workspace\custom_TaskModel_preempt\eiq\tensorflow-lite\third_party\neutron\mcxn" -u _printf_long_long -Xlinker -no-warn-rwx-segments -Xlinker -Map="custom_TaskModel_preempt.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -Xlinker --cref -mcpu=cortex-m33 -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -T custom_TaskModel_preempt_Debug.ld -o "custom_TaskModel_preempt.axf" $(OBJS) $(USER_OBJS) $(LIBS) -ltflm -lNeutronDriver -lNeutronFirmware
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) custom_TaskModel.axf
+	-$(RM) custom_TaskModel_preempt.axf
 	-@echo ' '
 
 post-build:
 	-@echo 'Performing post-build steps'
-	-arm-none-eabi-size "custom_TaskModel.axf"; # arm-none-eabi-objcopy -v -O binary "custom_TaskModel.axf" "custom_TaskModel.bin" ; # checksum -p MCXN947 -d "custom_TaskModel.bin";
+	-arm-none-eabi-size "custom_TaskModel_preempt.axf"; # arm-none-eabi-objcopy -v -O binary "custom_TaskModel_preempt.axf" "custom_TaskModel_preempt.bin" ; # checksum -p MCXN947 -d "custom_TaskModel_preempt.bin";
 	-@echo ' '
 
 .PHONY: all clean dependents main-build post-build

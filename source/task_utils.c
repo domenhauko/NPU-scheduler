@@ -5,11 +5,9 @@
  *      Author: Domen
  */
 
-#include <stdio.h>
 #include <string.h>
 
 #include "fsl_debug_console.h"
-#include "fsl_ctimer.h"
 #include "timer.h"
 
 #include "FreeRTOS.h"
@@ -312,11 +310,17 @@ TaskModel* getTaskByIndex(int index) {
 }
 
 TaskModel* isTaskHandleNull(TaskModel* task) {
+	if (task == NULL) {
+	        return NULL;
+	    }
+
 	if (task->handle == NULL) {
-		PRINTF("[TASk UTIL] Task Handle %s is NULL\r\n", task->name);
+		PRINTF("[TASK UTIL] Task handle for %s is NULL\r\n", task->name ? task->name : "(unnamed)");
 	} else {
-		PRINTF("[TASK UTIL] Task Handle is not NULL: %d\r\n", task->handle);
+		PRINTF("[TASK UTIL] Task handle for %s is not NULL: %p\r\n",
+			   task->name ? task->name : "(unnamed)", (void *)task->handle);
 	}
+	return task;
 }
 
 // Get task by name

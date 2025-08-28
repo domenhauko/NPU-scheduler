@@ -1,6 +1,10 @@
 /*
  * Advanced scheduler.c implementing priority-based scheduling with EDF tie-breaking
  * and smart preemption logic for hard/soft deadline tasks
+ *
+ *
+ *
+ * custom_TaskModel_preempt
  */
 
 #include "scheduler.h"
@@ -8,21 +12,15 @@
 #include "timer.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "semphr.h"
-#include "fsl_ctimer.h"
 #include "task_model.h"
 #include "task_utils.h"
 
-#include <stdarg.h>
 #include <stdint.h>
-#include <inttypes.h>
 #include <stdbool.h>
 
-#define MAX_TASKS 10
-#define MAX_INTERVALS 10
-#define CONTEXT_SWITCH 40000
-#define PREEMPT_CAPACITY 30000
-#define BUFFER 20000
+#define CONTEXT_SWITCH 0
+#define PREEMPT_CAPACITY 0
+#define BUFFER 30000
 
 static volatile int cpuBusy = 0;
 static volatile int npuBusy = 0;
@@ -75,8 +73,8 @@ void setCpuBusy(int busy) {
 
             // Reset task state and update next release time for periodic tasks
             currentCpuTask->state = TASK_STATE_WAITING;
-            currentCpuTask->releaseTime = now + currentCpuTask->period;
-            currentCpuTask->absoluteDeadline = currentCpuTask->releaseTime + currentCpuTask->deadline;
+            //currentCpuTask->releaseTime = now + currentCpuTask->period;				/// TOLE NI OKEJ!!! PERIODA SE NE ZAČNE ŠELE PO KONČANJU
+            //currentCpuTask->absoluteDeadline = currentCpuTask->releaseTime + currentCpuTask->deadline;
         }
 
         cpuBusy = 0;
@@ -110,8 +108,8 @@ void setNpuBusy(int busy) {
 
             // Reset task state and update next release time for periodic tasks
             currentNpuTask->state = TASK_STATE_WAITING;
-            currentNpuTask->releaseTime = now + currentNpuTask->period;
-            currentNpuTask->absoluteDeadline = currentNpuTask->releaseTime + currentNpuTask->deadline;
+            //currentNpuTask->releaseTime = now + currentNpuTask->period;
+            //currentNpuTask->absoluteDeadline = currentNpuTask->releaseTime + currentNpuTask->deadline;
         }
 
         npuBusy = 0;
@@ -131,6 +129,7 @@ static void updateTaskStates(uint32_t currentTime) {
                 PRINTF("[CRITICAL ERROR] Hard deadline missed by task %s! Time: %u, Deadline: %u\r\n",
                        task->name, currentTime, task->absoluteDeadline);
                 PRINTF("[SYSTEM HALT] Hard deadline violation - stopping system!\r\n");
+                printAllTaskDurations();
                 while(1); // Halt the system
                 task->state = TASK_STATE_WAITING; // For now continue and log for timing
             } else {
@@ -147,10 +146,14 @@ static void updateTaskStates(uint32_t currentTime) {
 
         // Update task states based on release times
         if (currentTime >= task->releaseTime && task->state == TASK_STATE_WAITING) {
-            task->state = TASK_STATE_READY;
-            task->absoluteDeadline = task->releaseTime + task->deadline;
+            uint32_t jobRelease = task->releaseTime;
+        	task->state = TASK_STATE_READY;
+            task->absoluteDeadline = jobRelease + task->deadline;
+
             PRINTF("[SCHEDULER] Task %s is now READY (Release: %u, Deadline: %u)\r\n",
                    task->name, task->releaseTime, task->absoluteDeadline);
+            // Schedule the *next* release
+            task->releaseTime = jobRelease + task->period;
         }
     }
 }
@@ -190,6 +193,8 @@ static TaskModel* selectNextTask(TaskType resourceType, uint32_t currentTime) {
 }
 
 static bool shouldPreemptTask(TaskModel* currentTask, TaskModel* newTask, uint32_t currentTime) {
+
+	PRINTF("Should preempt?\r\n");
     if (currentTask == NULL || newTask == NULL) {
         return false;
     }
@@ -201,7 +206,7 @@ static bool shouldPreemptTask(TaskModel* currentTask, TaskModel* newTask, uint32
     // Preemption rules based on our algorithm
     if (currentTask->deadlineType == DEADLINE_HARD && newTask->deadlineType == DEADLINE_HARD) {
         // Hard → Hard: preempt only if higher priority and in "danger zone"
-        return (newTask->priority < currentTask->priority) &&
+        return (newTask->priority > currentTask->priority) &&
         	   (timeUntilNewDeadline <= (newTask->capacity + PREEMPT_CAPACITY + CONTEXT_SWITCH + BUFFER));
     }
 
@@ -227,8 +232,7 @@ static void preemptTask(TaskModel* taskToPreempt) {
     totalPreemptions++;
 
 
-    // Force task to restart by deleting and recreating it
-    // This is an aggressive approach; vTaskSuspend might be an alternative
+    // vTaskSuspend suspends the preempted task and the task is recreated later
     if (taskToPreempt->handle != NULL) {
         vTaskSuspend(taskToPreempt->handle);
         taskToPreempt->handle = NULL;
@@ -256,8 +260,8 @@ void printSchedulerStats() {
     static uint32_t statsCounter = 0;
     uint32_t now = calculateDuration(schedulerStartTime, TIMER_GetTimeInUS());
 
-    // Print stats every 5 seconds and only when no tasks are busy
-    if (now - lastStatsTime > 5000000 && cpuBusy == 0 && npuBusy == 0) {
+    // Print stats every 2 seconds and only when no tasks are busy
+    if (now - lastStatsTime > 1000000 && cpuBusy == 0 && npuBusy == 0) {
         statsCounter++;
         PRINTF("\r\n=== ADVANCED SCHEDULER STATS #%u ===\r\n", statsCounter);
         PRINTF("Uptime: %u seconds\r\n", now / 1000000);
@@ -312,7 +316,6 @@ void runTaskScheduler(void* params) {
             TaskModel* nextCpuTask = selectNextTask(TASK_TYPE_CPU, now);
             if (nextCpuTask != NULL && nextCpuTask != currentCpuTask) {
                 if (shouldPreemptTask(currentCpuTask, nextCpuTask, now)) {
-                    // --- FIX START: Correct preemption logic ---
                     TaskModel* taskToPreempt = currentCpuTask;
                     uint32_t beforePreemption = TIMER_GetTimeInUS();
                     PRINTF("[SCHEDULER]: Time before preemption: %d\r\n", beforePreemption);
@@ -354,7 +357,6 @@ void runTaskScheduler(void* params) {
             TaskModel* nextNpuTask = selectNextTask(TASK_TYPE_NPU, now);
             if (nextNpuTask != NULL && nextNpuTask != currentNpuTask) {
                 if (shouldPreemptTask(currentNpuTask, nextNpuTask, now)) {
-                    // --- FIX START: Correct preemption logic ---
                     TaskModel* taskToPreempt = currentNpuTask;
                     preemptTask(taskToPreempt);
 

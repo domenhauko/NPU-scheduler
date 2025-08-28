@@ -3,24 +3,21 @@
  *
  *  Created on: 24 Jul 2025
  *      Author: Domen
+ *
+ *      custom_TaskModel_preempt
  */
 
-#include <stdio.h>
 #include <stdint.h>
-#include <inttypes.h>
-#include <task_utils.h>
+#include "task_utils.h"
 
 #include "fsl_debug_console.h"
 #include "image.h"
 #include "image_utils.h"
 #include "model.h"
-#include "output_postproc.h"
 #include "timer.h"
-#include "perf_timer.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
-#include "semphr.h"
 #include "task_model.h"
 #include "mobilenet_tasks.h"
 #include "scheduler.h"
@@ -28,35 +25,37 @@
 void createMobileNetTasks(void) {
     static TaskModel hello;
     static TaskModel mobile;
-    static TaskModel goodbye;
-    static TaskModel taskD_EDF;
+    //static TaskModel goodbye;
+    //static TaskModel taskD_EDF;
 
     // Initialize tasks
+    /*
     goodbye = (TaskModel){
     	.name = "Goodbye",
     	.taskFunc = goodbyeTask,
-        .priority = GOODBYE_TASK_PRIORITY,
+        .priority = 3,
         .type = TASK_TYPE_CPU,
 		.deadlineType = DEADLINE_SOFT,
         .releaseTime = 0,
-        .period = 250000,
-        .deadline = 250000,
-        .capacity = 50000,
+        .period = 1000000,
+        .deadline = 1000000,
+        .capacity = 500000,
         .stackSize = GOODBYE_TASK_STACK_SIZE,
 		.state = TASK_STATE_WAITING,
         .params = NULL,
         .handle = NULL
     };
+	*/
 
     mobile = (TaskModel){
     	.name = "MobileNet",
     	.taskFunc = mobilenetTask,
-        .priority = MOBILENET_TASK_PRIORITY,
+        .priority = 3,
         .type = TASK_TYPE_NPU,
 		.deadlineType = DEADLINE_HARD,
         .releaseTime = 0,
-        .period = 100000,
-        .deadline = 100000,
+        .period = 200000,
+        .deadline = 200000,
         .capacity = 40000,
         .stackSize = MOBILENET_TASK_STACK_SIZE,
 		.state = TASK_STATE_WAITING,
@@ -67,41 +66,40 @@ void createMobileNetTasks(void) {
     hello = (TaskModel){
     	.name = "Hello",
     	.taskFunc = helloTask,
-        .priority = HELLO_TASK_PRIORITY,
+        .priority = 3,
         .type = TASK_TYPE_CPU,
 		.deadlineType = DEADLINE_HARD,
-        .releaseTime = 30000,
-        .period = 100000,       // 100 ms
-        .deadline = 100000,     // 100 ms (tight deadline to force preemption)
-        .capacity = 30000,      // 30 ms of work
+        .releaseTime = 0,
+        .period = 100000,
+        .deadline = 100000,
+        .capacity = 40000,
         .stackSize = HELLO_TASK_STACK_SIZE,
 		.state = TASK_STATE_WAITING,
         .params = NULL,
         .handle = NULL
     };
 
-    // Task D: A high-priority task released at the same time as Task C
-	// to demonstrate Earliest Deadline First (EDF) tie-breaking.
-	// It has the same priority as Task C, but a later deadline, so Task C will be chosen first.
+    /*
 	taskD_EDF = (TaskModel){
-		.name = "CPU_Hard_EDF_Tie",
+		.name = "NPU_Soft",
 		.taskFunc = taskFunctionEDF,
-		.priority = HELLO_TASK_PRIORITY,
-		.type = TASK_TYPE_CPU,
-		.deadlineType = DEADLINE_HARD,
-		.releaseTime = 30000,   // Released at the same time as Task C
-		.period = 250000,       // 250 ms
-		.deadline = 250000,      // 250 ms (later deadline than Task C)
-		.capacity = 40000,      // 40 ms of work
+		.priority = 1,
+		.type = TASK_TYPE_NPU,
+		.deadlineType = DEADLINE_SOFT,
+		.releaseTime = 50000,
+		.period = 300000,
+		.deadline = 300000,
+		.capacity = 80000,
 		.stackSize = DEMO_STACK_SIZE,
 		.state = TASK_STATE_WAITING,
 		.handle = NULL,
 	};
+	*/
 
     createCustomTask(&hello);
     createCustomTask(&mobile);
-    createCustomTask(&goodbye);
-    createCustomTask(&taskD_EDF);
+    //createCustomTask(&goodbye);
+    //createCustomTask(&taskD_EDF);
 }
 
 void mobilenetTask(void *pvParameters)
@@ -157,7 +155,7 @@ void helloTask(void *pvParameters)
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
         // Simulate work
-        vTaskDelay(pdMS_TO_TICKS(task->capacity));
+        vTaskDelay(pdMS_TO_TICKS(task->capacity / 1000));
         //PRINTF("[TASK] %s: Hello world!\r\n", task->name);
 
         // Signal completion back to scheduler
@@ -174,7 +172,7 @@ void goodbyeTask(void *pvParameters)
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
         // Simulate work
-        vTaskDelay(pdMS_TO_TICKS(task->capacity));
+        vTaskDelay(pdMS_TO_TICKS(task->capacity / 1000));
         //PRINTF("[TASK] %s: Goodbye!\r\n", task->name);
 
         // Signal completion back to scheduler

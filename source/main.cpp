@@ -3,6 +3,8 @@
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * custom_TaskModel_preempt
  */
 
 #include <stdio.h>
@@ -26,7 +28,6 @@
 #include "task_model.h"
 #include "mobilenet_tasks.h"
 #include "scheduler.h"
-#include "random_task_generator.h"
 
 /* Prototypes */
 BaseType_t createCustomTask(TaskModel *task);
